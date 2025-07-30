@@ -23,7 +23,7 @@ export class StringMapStorage extends DataStorage<StringMap> {
     delete data[key];
     await this.save('string-map', data);
   }
-
+  //@ts-ignore
   async getAll(): Promise<StringMap> {
     return (await this.load('string-map')) || {};
   }
