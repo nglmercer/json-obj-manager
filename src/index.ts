@@ -5,7 +5,8 @@ import { StringMapStorage } from './utils/string-map-storage';
 import { ChatMemory, PersistentChatMemory } from './utils/memory';
 export const createMemory = () => new ChatMemory();
 export const createStringMap = () => new StringMapStorage();
-export { JSONFile } from './adapters/json-file-adapter'
+export { JSONFile } from './adapters/json-file-adapter';
+export { LocalStorageAdapter } from './adapters/local-storage-adapter'
 export {
     ChatMemory,
     PersistentChatMemory,
