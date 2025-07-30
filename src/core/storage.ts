@@ -26,8 +26,18 @@ export class DataStorage<T extends AllowedData> {
     await this.adapter.clear();
   }
 
+  async getAll(): Promise<Record<string, T>> {
+    // Si el adapter tiene método getAll, usarlo
+    if (typeof this.adapter.getAll === 'function') {
+      return await this.adapter.getAll();
+    }
+    
+    // Fallback: cargar todos los datos individualmente
+    // Esto es menos eficiente pero funciona
+    return this.adapter.data || {};
+  }
+
   private validateData(data: T): boolean {
-    // Validación básica - puedes extender según necesites
     if (data === null || data === undefined) return false;
     return true;
   }

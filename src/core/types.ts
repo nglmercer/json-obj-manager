@@ -1,4 +1,6 @@
 export interface StorageAdapter<T> {
+  data?: Record<string, T>;
+  getAll?(): Promise<Record<string, T>>; // Método opcional
   save(key: string, data: T): Promise<void>;
   load(key: string): Promise<T | null>;
   delete(key: string): Promise<void>;

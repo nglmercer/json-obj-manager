@@ -44,6 +44,7 @@ export class ChatMemory implements MemoryStore {
 export class PersistentChatMemory extends ChatMemory {
   private storageKey = 'chat-memory';
   private storage: StorageAdapter<Message[]>;
+  private loaded = false;
 
   constructor(storage: StorageAdapter<Message[]>) {
     super();
@@ -66,15 +67,37 @@ export class PersistentChatMemory extends ChatMemory {
     this.storage.delete(this.storageKey);
   }
 
-  private async saveMessages(): Promise<void> {
+  async saveMessages(): Promise<void> {
     await this.storage.save(this.storageKey, this.getMessages());
   }
 
-  private async loadMessages(): Promise<void> {
-    const saved = await this.storage.load(this.storageKey);
-    if (saved) {
-      // Restaurar mensajes
-      this.messages = saved;
+  async loadMessages(): Promise<void> {
+    try {
+      const saved = await this.storage.load(this.storageKey);
+      if (saved && Array.isArray(saved)) {
+        this.messages = saved.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+        }));
+      }
+      this.loaded = true;
+    } catch (error) {
+      console.warn('Error loading messages:', error);
+      this.messages = [];
     }
+  }
+
+  // Método para forzar recarga
+  async reload(): Promise<void> {
+    await this.loadMessages();
+  }
+
+  // Método para obtener mensajes de forma asíncrona
+  async getMessagesAsync(): Promise<Message[]> {
+    if (!this.loaded) {
+      await this.loadMessages();
+    }
+    return this.getMessages();
   }
 }

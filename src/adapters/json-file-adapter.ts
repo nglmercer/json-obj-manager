@@ -2,11 +2,11 @@ import { StorageAdapter } from '../core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export class JSONFileAdapter<T> implements StorageAdapter<T> {
+export class JSONFile<T> implements StorageAdapter<T> {
   private filePath: string;
-
+  public data: Record<string, T> = {}; // Agregar caché
+  
   constructor(filename: string) {
-    // Usar process.cwd() para rutas relativas
     this.filePath = path.resolve(process.cwd(), filename);
   }
 
@@ -14,95 +14,61 @@ export class JSONFileAdapter<T> implements StorageAdapter<T> {
     try {
       await fs.access(this.filePath);
     } catch {
-      // Si no existe, crear directorio si es necesario y archivo vacío
       const dir = path.dirname(this.filePath);
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(this.filePath, JSON.stringify({}), 'utf-8');
     }
   }
 
-  private isValidJSON(data: string): boolean {
+  private async readAllData(): Promise<Record<string, T>> {
     try {
-      JSON.parse(data);
-      return true;
-    } catch {
-      return false;
+      await this.ensureFileExists();
+      const fileContent = await fs.readFile(this.filePath, 'utf-8');
+      
+      if (!fileContent.trim()) return {};
+      
+      const parsed = JSON.parse(fileContent);
+      this.data = parsed; // Actualizar caché
+      return parsed;
+    } catch (error) {
+      console.warn(`Error reading file ${this.filePath}:`, error);
+      return {};
+    }
+  }
+
+  private async writeAllData(data: Record<string, T>): Promise<void> {
+    try {
+      await this.ensureFileExists();
+      await fs.writeFile(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      this.data = data; // Actualizar caché
+    } catch (error) {
+      throw new Error(`Error writing to file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async save(key: string, data: T): Promise<void> {
-    await this.ensureFileExists();
-
-    try {
-      const fileContent = await fs.readFile(this.filePath, 'utf-8');
-      let allData: Record<string, T> = {};
-      
-      // Si el archivo tiene contenido válido, cargarlo
-      if (fileContent.trim() && this.isValidJSON(fileContent)) {
-        allData = JSON.parse(fileContent);
-      }
-      
-      allData[key] = data;
-      await fs.writeFile(this.filePath, JSON.stringify(allData, null, 2), 'utf-8');
-    } catch (error) {
-      throw new Error(`Error saving data: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const allData = await this.readAllData();
+    allData[key] = data;
+    await this.writeAllData(allData);
   }
 
   async load(key: string): Promise<T | null> {
-    try {
-      await this.ensureFileExists();
-      
-      const fileContent = await fs.readFile(this.filePath, 'utf-8');
-      
-      // Si el archivo está vacío o es inválido, retornar null
-      if (!fileContent.trim() || !this.isValidJSON(fileContent)) {
-        return null;
-      }
-      
-      const allData = JSON.parse(fileContent);
-      return allData[key] || null;
-    } catch (error) {
-      // Si hay error de parsing o lectura, retornar null
-      if (error instanceof SyntaxError) {
-        console.warn(`Corrupted JSON file: ${error.message}`);
-        return null;
-      }
-      
-      throw new Error(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const allData = await this.readAllData();
+    return allData[key] || null;
   }
 
   async delete(key: string): Promise<void> {
-    try {
-      await this.ensureFileExists();
-      
-      const fileContent = await fs.readFile(this.filePath, 'utf-8');
-      
-      if (!fileContent.trim() || !this.isValidJSON(fileContent)) {
-        return;
-      }
-      
-      const allData = JSON.parse(fileContent);
-      delete allData[key];
-      
-      await fs.writeFile(this.filePath, JSON.stringify(allData, null, 2), 'utf-8');
-    } catch (error) {
-      throw new Error(`Error deleting data: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const allData = await this.readAllData();
+    delete allData[key];
+    await this.writeAllData(allData);
   }
 
   async clear(): Promise<void> {
-    try {
-      await this.ensureFileExists();
-      await fs.writeFile(this.filePath, JSON.stringify({}), 'utf-8');
-    } catch (error) {
-      throw new Error(`Error clearing data: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    await this.writeAllData({});
   }
 
-  // Método adicional para obtener la ruta del archivo
-  getFilePath(): string {
-    return this.filePath;
+  // Método para obtener todos los datos
+  async getAll(): Promise<Record<string, T>> {
+    return await this.readAllData();
   }
 }
