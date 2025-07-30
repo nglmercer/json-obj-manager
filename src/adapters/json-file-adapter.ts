@@ -2,7 +2,7 @@ import { StorageAdapter } from '../core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export class JSONFile<T> implements StorageAdapter<T> {
+export class JSONFileAdapter<T> implements StorageAdapter<T> {
   private filePath: string;
   public data: Record<string, T> = {}; // Agregar caché
   

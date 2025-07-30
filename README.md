@@ -1,320 +1,214 @@
-# Edge TTS
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/andresayac/edge-tts)
+## Universal Storage Library
 
-**Edge TTS** is a powerful Text-to-Speech (TTS) package that leverages Microsoft's Edge capabilities. This package allows you to synthesize speech from text and manage voice options easily through a command-line interface (CLI).
+A flexible TypeScript storage library that works both in Node.js (file system) and browsers (localStorage) with a unified API.
 
-## Features
-
-- **Text-to-Speech**: Convert text into natural-sounding speech using Microsoft Edge's TTS capabilities.
-- **Multiple Voices**: Access a variety of voices to suit your project's needs.
-- **Voice Filtering**: Filter voices by language and gender for better selection.
-- **Audio Information**: Get detailed information about generated audio (size, duration, format).
-- **Audio Export Options**: Export synthesized audio in different formats (raw, base64, or directly to a file).
-- **Streaming Support**: Stream audio data in real-time for better performance.
-- **Command-Line Interface**: Use a simple CLI for easy access to functionality.
-- **Easy Integration**: Modular structure allows for easy inclusion in existing projects.
-
-## Installation
-
-You can install Edge TTS via npm or bun:
+### Installation
 
 ```bash
-bun add @andresaya/edge-tts
-```
-```bash
-npm install @andresaya/edge-tts
+npm install json-obj-manager
 ```
 
-## Usage
+### Basic Usage
 
-### Command-Line Interface
+#### Node.js (File System)
+```typescript
+import { DataStorage, JSONFileAdapter } from 'json-obj-manager';
+import path from 'path';
 
-Install globally to use the CLI:
-
-```bash
-npm install -g @andresaya/edge-tts
+const storage = new DataStorage(new JSONFileAdapter(path.join(process.cwd(), 'data.json')));
+await storage.save('user-1', { name: 'John', age: 30 });
+const user = await storage.load('user-1');
 ```
 
-To synthesize speech from text:
-```bash
-edge-tts synthesize -t "Hello, world!" -o hello_world_audio
+#### Browser (LocalStorage)
+```typescript
+import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
+
+const storage = new DataStorage(new LocalStorageAdapter('my-app'));
+await storage.save('user-1', { name: 'John', age: 30 });
+const user = await storage.load('user-1');
 ```
 
-To list available voices:
-```bash
-edge-tts voice-list
+## Core Classes
+
+### DataStorage<T>
+
+Generic storage class that works with any adapter.
+
+#### Constructor
+```typescript
+new DataStorage<T>(adapter: StorageAdapter<T>)
 ```
 
-### Integration into Your Project
+#### Methods
 
-```js
-import { EdgeTTS } from '@andresaya/edge-tts';
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `save` | `key: string, data: T` | `Promise<void>` | Save data with a key |
+| `load` | `key: string` | `Promise<T \| null>` | Load data by key |
+| `delete` | `key: string` | `Promise<void>` | Delete data by key |
+| `clear` | - | `Promise<void>` | Clear all stored data |
+| `getAll` | - | `Promise<Record<string, T>>` | Get all stored data |
 
-// Initialize the EdgeTTS service
-const tts = new EdgeTTS();
+### StringMapStorage
+
+Specialized storage for string key-value pairs.
+
+#### Constructor
+```typescript
+new StringMapStorage(adapter?: StorageAdapter<StringMap>)
 ```
 
-## API Reference
+#### Methods
 
-### Voice Management
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `setValue` | `key: string, value: string` | `Promise<void>` | Set a string value |
+| `getValue` | `key: string` | `Promise<string \| undefined>` | Get a string value |
+| `removeKey` | `key: string` | `Promise<void>` | Remove a key |
+| `getAll` | - | `Promise<StringMap>` | Get all key-value pairs |
 
-#### Get All Voices
-```js
-const voices = await tts.getVoices();
-console.log(`Found ${voices.length} voices`);
+### ChatMemory & PersistentChatMemory
+
+In-memory and persistent chat memory storage.
+
+#### ChatMemory (In-Memory)
+```typescript
+const memory = new ChatMemory();
+memory.addUserMessage("Hello!");
+memory.addAIMessage("Hi there!");
+const messages = memory.getMessages();
 ```
 
-#### Filter Voices by Language
-```js
-// Get all English voices
-const englishVoices = await tts.getVoicesByLanguage('en');
-
-// Get specific locale voices
-const usEnglishVoices = await tts.getVoicesByLanguage('en-US');
+#### PersistentChatMemory (Persistent)
+```typescript
+const memory = new PersistentChatMemory(
+  new LocalStorageAdapter<Message[]>('chat-history')
+);
+memory.addUserMessage("Hello!");
 ```
 
-#### Filter Voices by Gender
-```js
-// Get all female voices
-const femaleVoices = await tts.getVoicesByGender('Female');
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `addUserMessage` | `content: string, timestamp?: Date` | `void` | Add user message |
+| `addAIMessage` | `content: string, timestamp?: Date` | `void` | Add AI message |
+| `getMessages` | - | `Message[]` | Get all messages |
+| `getLastMessages` | `count?: number` | `Message[]` | Get last N messages |
+| `getMessagesSince` | `date: Date` | `Message[]` | Get messages since date |
+| `clear` | - | `void` | Clear all messages |
+| `getMessagesAsync` | - | `Promise<Message[]>` | Async get messages (PersistentChatMemory) |
+| `reload` | - | `Promise<void>` | Reload from storage (PersistentChatMemory) |
 
-// Get all male voices
-const maleVoices = await tts.getVoicesByGender('Male');
+## Adapters
+
+### JSONFileAdapter (Node.js)
+
+File system adapter using JSON files.
+
+#### Constructor
+```typescript
+new JSONFileAdapter<T>(filename: string)
 ```
 
-### Text Synthesis
+#### Methods
 
-#### Basic Synthesis
-```js
-// Simple synthesis with default voice
-await tts.synthesize("Hello, world!");
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `save` | `key: string, data: T` | `Promise<void>` | Save data to file |
+| `load` | `key: string` | `Promise<T \| null>` | Load data from file |
+| `delete` | `key: string` | `Promise<void>` | Delete data from file |
+| `clear` | - | `Promise<void>` | Clear file contents |
+| `getAll` | - | `Promise<Record<string, T>>` | Get all data |
+| `getFilePath` | - | `string` | Get file path |
 
-// Synthesis with specific voice
-await tts.synthesize("Hello, world!", 'en-US-AriaNeural');
+### LocalStorageAdapter (Browser)
+
+Browser adapter using localStorage.
+
+#### Constructor
+```typescript
+new LocalStorageAdapter<T>(storageKey?: string)
 ```
 
-#### Advanced Synthesis with Options
-```js
-await tts.synthesize("Hello, world!", 'en-US-AriaNeural', {
-    rate: '50%',      // Speech rate: -100% to +200% (or number)
-    volume: '90%',    // Speech volume: -100% to +100% (or number)
-    pitch: '+20Hz'    // Voice pitch: -100Hz to +100Hz (or number)
-});
-```
+#### Methods
 
-#### Streaming Synthesis
-```js
-// Stream audio data in real-time
-for await (const chunk of tts.synthesizeStream("Long text to stream...", 'en-US-AriaNeural')) {
-    // Process each audio chunk as it arrives
-    console.log(`Received chunk: ${chunk.length} bytes`);
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `save` | `key: string, data: T` | `Promise<void>` | Save to localStorage |
+| `load` | `key: string` | `Promise<T \| null>` | Load from localStorage |
+| `delete` | `key: string` | `Promise<void>` | Delete from localStorage |
+| `clear` | - | `Promise<void>` | Clear all data |
+| `getAll` | - | `Promise<Record<string, T>>` | Get all data |
+| `getStorageKey` | - | `string` | Get storage key |
+| `sync` | - | `void` | Sync with localStorage |
+| `destroy` | - | `void` | Remove from localStorage |
+
+### InMemoryAdapter
+
+Simple in-memory adapter for testing.
+
+## Types
+
+### Message
+```typescript
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
 }
 ```
 
-### Audio Information
-
-#### Get Audio Details
-```js
-await tts.synthesize("Hello, world!");
-
-const audioInfo = tts.getAudioInfo();
-console.log(`Size: ${audioInfo.size} bytes`);
-console.log(`Format: ${audioInfo.format}`);
-console.log(`Duration: ${audioInfo.estimatedDuration} seconds`);
+### StringMap
+```typescript
+type StringMap = Record<string, string>;
 ```
 
-#### Get Duration Only
-```js
-const duration = tts.getDuration();
-console.log(`Audio duration: ${duration} seconds`);
-```
-
-### Export Options
-
-#### Export as Base64
-```js
-await tts.synthesize("Hello, world!");
-const base64Audio = tts.toBase64();
-console.log(`Base64 length: ${base64Audio.length}`);
-```
-
-#### Export as Raw Buffer
-```js
-const rawAudio = tts.toRaw(); // Alias for toBase64()
-const buffer = tts.toBuffer(); // Get as Buffer object
-```
-
-#### Export to File
-```js
-const filePath = await tts.toFile("output_audio");
-console.log(`Audio saved to: ${filePath}`);
-// Creates: output_audio.mp3
+### StorageAdapter<T>
+```typescript
+interface StorageAdapter<T> {
+  save(key: string, data: T): Promise<void>;
+  load(key: string): Promise<T | null>;
+  delete(key: string): Promise<void>;
+  clear(): Promise<void>;
+}
 ```
 
 ## Examples
 
-### Complete Example with Voice Selection
-```js
-import { EdgeTTS } from '@andresaya/edge-tts';
+### Basic CRUD Operations
+```typescript
+import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
 
-async function textToSpeechExample() {
-    const tts = new EdgeTTS();
-    
-    // Get available English voices
-    const englishVoices = await tts.getVoicesByLanguage('en-US');
-    console.log(`Available English voices: ${englishVoices.length}`);
-    
-    // Use the first available voice
-    const voice = englishVoices[0];
-    console.log(`Using voice: ${voice.FriendlyName}`);
-    
-    // Synthesize with custom options
-    await tts.synthesize(
-        "This is a test of the Edge TTS system with custom voice parameters.",
-        voice.ShortName,
-        {
-            pitch: '+10Hz',
-            rate: '-10%',
-            volume: '90%'
-        }
-    );
-    
-    // Get audio information
-    const info = tts.getAudioInfo();
-    console.log(`Generated audio: ${info.size} bytes, ${info.estimatedDuration.toFixed(2)}s`);
-    
-    // Save to file
-    const outputPath = await tts.toFile('./output/speech');
-    console.log(`Audio saved to: ${outputPath}`);
-}
+const storage = new DataStorage(new LocalStorageAdapter('app-data'));
 
-textToSpeechExample().catch(console.error);
+// Create
+await storage.save('user-1', { name: 'Alice', age: 25 });
+
+// Read
+const user = await storage.load('user-1');
+
+// Update
+await storage.save('user-1', { name: 'Alice', age: 26 });
+
+// Delete
+await storage.delete('user-1');
+
+// Get all
+const allData = await storage.getAll();
 ```
 
-### Streaming Example
-```js
-import { EdgeTTS } from '@andresaya/edge-tts';
-import { createWriteStream } from 'fs';
+### Chat Application
+```typescript
+import { PersistentChatMemory, LocalStorageAdapter } from 'json-obj-manager';
 
-async function streamingExample() {
-    const tts = new EdgeTTS();
-    const writeStream = createWriteStream('streaming_output.mp3');
-    
-    const longText = "This is a very long text that will be streamed...";
-    
-    for await (const chunk of tts.synthesizeStream(longText, 'en-US-AriaNeural')) {
-        writeStream.write(chunk);
-        console.log(`Streamed ${chunk.length} bytes`);
-    }
-    
-    writeStream.end();
-    console.log('Streaming completed!');
-}
+const chat = new PersistentChatMemory(
+  new LocalStorageAdapter<Message[]>('chat-app')
+);
 
-streamingExample().catch(console.error);
+// Add messages
+chat.addUserMessage("What's the weather like?");
+chat.addAIMessage("It's sunny and 75°F today.");
+
+// Get chat history
+const messages = chat.getMessages();
 ```
-
-### Voice Exploration Example
-```js
-import { EdgeTTS } from '@andresaya/edge-tts';
-
-async function exploreVoices() {
-    const tts = new EdgeTTS();
-    
-    // Get all voices
-    const allVoices = await tts.getVoices();
-    console.log(`Total voices available: ${allVoices.length}`);
-    
-    // Group by language
-    const languages = [...new Set(allVoices.map(v => v.Locale.split('-')[0]))];
-    console.log(`Languages available: ${languages.join(', ')}`);
-    
-    // Get Spanish voices
-    const spanishVoices = await tts.getVoicesByLanguage('es');
-    console.log(`Spanish voices: ${spanishVoices.length}`);
-    
-    // Get female voices
-    const femaleVoices = await tts.getVoicesByGender('Female');
-    console.log(`Female voices: ${femaleVoices.length}`);
-    
-    // Test different voices
-    const testText = "Hola, este es un ejemplo de síntesis de voz.";
-    
-    for (const voice of spanishVoices.slice(0, 3)) {
-        console.log(`Testing voice: ${voice.FriendlyName}`);
-        
-        await tts.synthesize(testText, voice.ShortName);
-        const filePath = await tts.toFile(`./voices/${voice.ShortName}`);
-        
-        console.log(`Saved: ${filePath}`);
-    }
-}
-
-exploreVoices().catch(console.error);
-```
-
-## Voice Options
-
-### Synthesis Parameters
-
-| Parameter | Type | Range | Description |
-|-----------|------|-------|-------------|
-| `pitch` | `string \| number` | `-100Hz` to `+100Hz` | Voice pitch adjustment |
-| `rate` | `string \| number` | `-100%` to `+200%` | Speech rate adjustment |
-| `volume` | `string \| number` | `-100%` to `+100%` | Volume adjustment |
-
-### Parameter Examples
-```js
-// Using numbers (recommended)
-{ pitch: 20, rate: -10, volume: 90 }
-
-// Using strings
-{ pitch: '+20Hz', rate: '-10%', volume: '90%' }
-
-// Mixed usage
-{ pitch: 15, rate: '25%', volume: 85 }
-```
-
-## Error Handling
-
-```js
-import { EdgeTTS } from '@andresaya/edge-tts';
-
-async function handleErrors() {
-    const tts = new EdgeTTS();
-    
-    try {
-        await tts.synthesize("Test text", 'invalid-voice-name');
-    } catch (error) {
-        console.error('Synthesis failed:', error.message);
-    }
-    
-    try {
-        // This will throw an error - no audio data
-        const duration = tts.getDuration();
-    } catch (error) {
-        console.error('No audio data available:', error.message);
-    }
-    
-    try {
-        // Invalid volume range
-        await tts.synthesize("Test", 'en-US-AriaNeural', { volume: -150 });
-    } catch (error) {
-        console.error('Invalid parameter:', error.message);
-    }
-}
-```
-
-## PHP Version
-If you want to use Edge TTS with PHP, you can check out the PHP version of this package: [Edge TTS PHP](https://github.com/andresayac/edge-tts-php)
-
-## License
-This project is licensed under the GNU General Public License v3 (GPLv3).
-
-## Acknowledgments
-
-We would like to extend our gratitude to the developers and contributors of the following projects for their inspiration and groundwork:
-
-* https://github.com/rany2/edge-tts/tree/master/examples
-* https://github.com/rany2/edge-tts/blob/master/src/edge_tts/util.py
-* https://github.com/hasscc/hass-edge-tts/blob/main/custom_components/edge_tts/tts.py
