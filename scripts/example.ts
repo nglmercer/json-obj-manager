@@ -1,7 +1,7 @@
-import { DataStorage } from './core/storage';
-import { JSONFileAdapter } from './adapters/json-file-adapter';
-import { StringMapStorage } from './utils/string-map-storage';
-import { PersistentChatMemory } from './utils/memory';
+import { DataStorage } from '../src/core/storage';
+import { JSONFileAdapter } from '../src/adapters/json-file-adapter';
+import { StringMapStorage } from '../src/utils/string-map-storage';
+import { PersistentChatMemory } from '../src/utils/memory';
 import path from 'path';
 interface User {
     name: string;
