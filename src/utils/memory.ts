@@ -1,5 +1,5 @@
-import { MemoryStore, Message } from '../core/types';
-import { StorageAdapter } from '../core/types';
+import { MemoryStore, Message } from '../core/types.js';
+import { StorageAdapter } from '../core/types.js';
 export class ChatMemory implements MemoryStore {
   public messages: Message[] = [];
 

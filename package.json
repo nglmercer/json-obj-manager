@@ -1,13 +1,13 @@
 {
   "name": "json-obj-manager",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "description": "Agnostic JSON data manager for Node.js and the browser.",
   "source": "src/index.ts",
-  "main": "./dist/index.js",
-  "module": "./dist/index.module.js",
-  "unpkg": "./dist/index.umd.js",
-  "types": "./dist/index.d.ts",
+  "main": "dist/index.cjs",
+  "module": "dist/index.module.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
   "keywords": [
     "json",
     "data",
@@ -25,9 +25,10 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && microbundle --entry src/index.ts --format modern,cjs,esm,umd --target node",
-    "build:all": "npm run clean && microbundle --entry src/index.ts,src/node.ts,src/browser.ts --format modern,cjs,esm --target node",
-    "dev": "microbundle watch --entry src/index.ts --format modern,cjs,esm",
+    "build:index": "microbundle -i src/index.ts -o dist/index.js --format modern,cjs,esm --target node",
+    "build:node": "microbundle -i src/node.ts -o dist/node.js --format modern,cjs,esm --target node",
+    "build:browser": "microbundle -i src/browser.ts -o dist/browser.js --format modern,cjs,esm --target browser",
+    "build": "npm run clean && npm run build:index && npm run build:node && npm run build:browser",
     "prepublishOnly": "npm run build"
   },
   "files": [
@@ -35,26 +36,41 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.module.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.modern.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./node": {
-      "import": "./dist/node.module.js",
-      "require": "./dist/node.js",
-      "types": "./dist/node.d.ts"
+      "import": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.modern.js"
+      },
+      "require": {
+        "types": "./dist/node.d.ts",
+        "default": "./dist/node.cjs"
+      }
     },
     "./browser": {
-      "import": "./dist/browser.module.js",
-      "require": "./dist/browser.js",
-      "types": "./dist/browser.d.ts"
+      "import": {
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.modern.js"
+      },
+      "require": {
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "microbundle": "^0.15.1",
-    "rimraf": "^6.0.1",
+    "rimraf": "^5.0.5",
     "typescript": "^5.0.0"
   }
 }

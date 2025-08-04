@@ -1,6 +1,6 @@
-import { StorageAdapter } from './types';
-import { AllowedData } from './types';
-import { Emitter } from '../utils/Emitter';
+import { StorageAdapter } from './types.js';
+import { AllowedData } from './types.js';
+import { Emitter } from '../utils/Emitter.js';
 
 export class DataStorage<T extends AllowedData> {
   private adapter: StorageAdapter<T>;

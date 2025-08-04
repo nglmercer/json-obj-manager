@@ -1,5 +1,5 @@
 // src/adapters/local-storage.ts
-import type { StorageAdapter } from '../core/types';
+import type { StorageAdapter } from '../core/types.js';
 
 export class LocalStorageAdapter<T> implements StorageAdapter<T> {
   private storageKey: string;

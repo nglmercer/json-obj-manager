@@ -1,5 +1,5 @@
-import { DataStorage, InMemoryAdapter } from '../core/storage';
-import { StringMap, StorageAdapter } from '../core/types';
+import { DataStorage, InMemoryAdapter } from '../core/storage.js';
+import { StringMap, StorageAdapter } from '../core/types.js';
 
 export class StringMapStorage extends DataStorage<StringMap> {
   constructor(adapter?: StorageAdapter<StringMap>) {

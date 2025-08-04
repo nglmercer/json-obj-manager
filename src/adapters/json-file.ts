@@ -1,5 +1,5 @@
 // src/adapters/json-file.ts
-import type { StorageAdapter } from '../core/types';
+import type { StorageAdapter } from '../core/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
