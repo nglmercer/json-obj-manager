@@ -179,3 +179,4 @@ dist
 bin/
 *.wav
 /temp
+package-lock.json
