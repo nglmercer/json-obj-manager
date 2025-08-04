@@ -8,7 +8,7 @@ export interface StorageAdapter<T> {
 }
 
 export type StringMap = Record<string, string>;
-export type AllowedData = string | number | boolean | object | null;
+export type AllowedData = string | number | boolean | null | { [key: string]: AllowedData } | AllowedData[] | StringMap | unknown;
 
 export interface Message {
   role: 'user' | 'assistant';

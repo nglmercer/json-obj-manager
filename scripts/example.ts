@@ -1,5 +1,5 @@
 import { DataStorage } from '../src/core/storage';
-import { JSONFileAdapter } from '../src/adapters/json-file-adapter';
+import { JSONFileAdapter } from '../src/adapters/json-file';
 import { StringMapStorage } from '../src/utils/string-map-storage';
 import { PersistentChatMemory } from '../src/utils/memory';
 import path from 'path';

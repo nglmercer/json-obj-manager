@@ -1,11 +1,12 @@
-import { StorageAdapter } from '../core/types';
+// src/adapters/json-file.ts
+import type { StorageAdapter } from '../core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export class JSONFileAdapter<T> implements StorageAdapter<T> {
   private filePath: string;
-  public data: Record<string, T> = {}; // Agregar caché
-  
+  public data: Record<string, T> = {};
+
   constructor(filename: string) {
     this.filePath = path.resolve(process.cwd(), filename);
   }
@@ -24,28 +25,25 @@ export class JSONFileAdapter<T> implements StorageAdapter<T> {
     try {
       await this.ensureFileExists();
       const fileContent = await fs.readFile(this.filePath, 'utf-8');
-      
       if (!fileContent.trim()) return {};
-      
-      const parsed = JSON.parse(fileContent);
-      this.data = parsed; // Actualizar caché
-      return parsed;
+      this.data = JSON.parse(fileContent);
+      return this.data;
     } catch (error) {
       console.warn(`Error reading file ${this.filePath}:`, error);
       return {};
     }
   }
 
+
   private async writeAllData(data: Record<string, T>): Promise<void> {
     try {
       await this.ensureFileExists();
       await fs.writeFile(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
-      this.data = data; // Actualizar caché
+      this.data = data;
     } catch (error) {
       throw new Error(`Error writing to file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
-
   async save(key: string, data: T): Promise<void> {
     const allData = await this.readAllData();
     allData[key] = data;

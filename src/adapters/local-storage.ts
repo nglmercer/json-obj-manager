@@ -1,4 +1,5 @@
-import { StorageAdapter } from '../core/types';
+// src/adapters/local-storage.ts
+import type { StorageAdapter } from '../core/types';
 
 export class LocalStorageAdapter<T> implements StorageAdapter<T> {
   private storageKey: string;
@@ -6,24 +7,26 @@ export class LocalStorageAdapter<T> implements StorageAdapter<T> {
 
   constructor(storageKey: string = 'app-storage') {
     this.storageKey = storageKey;
-    this.loadCache();
+    // Check if localStorage is available (prevents errors in SSR environments)
+    if (typeof localStorage !== 'undefined') {
+      this.loadCache();
+    }
   }
 
   private loadCache(): void {
     try {
       const stored = localStorage.getItem(this.storageKey);
-      if (stored) {
-        this.cache = JSON.parse(stored);
-      } else {
-        this.cache = {};
-      }
+      this.cache = stored ? JSON.parse(stored) : {};
     } catch (error) {
       console.warn('Error loading from localStorage:', error);
       this.cache = {};
     }
   }
-
   private saveCache(): void {
+    if (typeof localStorage === 'undefined') {
+      console.warn('localStorage is not available. Data will not be persisted.');
+      return;
+    }
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.cache));
     } catch (error) {
