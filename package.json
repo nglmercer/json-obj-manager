@@ -1,6 +1,6 @@
 {
   "name": "json-obj-manager",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "type": "module",
   "description": "Agnostic JSON data manager for Node.js and the browser.",
   "source": "src/index.ts",

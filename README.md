@@ -12,7 +12,9 @@ npm install json-obj-manager
 
 #### Node.js (File System)
 ```typescript
-import { DataStorage, JSONFileAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { JSONFileAdapter } from 'json-obj-manager/node';
+
 import path from 'path';
 
 const storage = new DataStorage(new JSONFileAdapter(path.join(process.cwd(), 'data.json')));
@@ -22,7 +24,8 @@ const user = await storage.load('user-1');
 
 #### Browser (LocalStorage)
 ```typescript
-import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
 
 const storage = new DataStorage(new LocalStorageAdapter('my-app'));
 await storage.save('user-1', { name: 'John', age: 30 });
@@ -49,6 +52,11 @@ new DataStorage<T>(adapter: StorageAdapter<T>)
 | `delete` | `key: string` | `Promise<void>` | Delete data by key |
 | `clear` | - | `Promise<void>` | Clear all stored data |
 | `getAll` | - | `Promise<Record<string, T>>` | Get all stored data |
+| `on` | `event: DataStorageEvents, listener: (data: T) => void` | `void` | Register an event listener |
+| `off` | `event: DataStorageEvents, listener: (data: T) => void` | `void` | Remove an event listener |
+| `setEmitMode` | `mode: EmitMode` | `void` | Set emit mode (info, debug, error, none) |
+
+
 
 ### StringMapStorage
 
@@ -177,7 +185,8 @@ interface StorageAdapter<T> {
 
 ### Basic CRUD Operations
 ```typescript
-import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
 
 const storage = new DataStorage(new LocalStorageAdapter('app-data'));
 
@@ -199,7 +208,9 @@ const allData = await storage.getAll();
 
 ### Chat Application
 ```typescript
-import { PersistentChatMemory, LocalStorageAdapter } from 'json-obj-manager';
+import { PersistentChatMemory } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
+import { Message } from 'json-obj-manager';
 
 const chat = new PersistentChatMemory(
   new LocalStorageAdapter<Message[]>('chat-app')

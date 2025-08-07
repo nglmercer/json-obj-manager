@@ -14,20 +14,23 @@ npm install json-obj-manager
 
 #### Node.js (Sistema de Archivos)
 ```typescript
-import { DataStorage, JSONFileAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { JSONFileAdapter } from 'json-obj-manager/node';
+
 import path from 'path';
 
 const storage = new DataStorage(new JSONFileAdapter(path.join(process.cwd(), 'data.json')));
-await storage.save('user-1', { name: 'Juan', age: 30 });
+await storage.save('user-1', { name: 'John', age: 30 });
 const user = await storage.load('user-1');
 ```
 
 #### Navegador (LocalStorage)
 ```typescript
-import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
 
 const storage = new DataStorage(new LocalStorageAdapter('my-app'));
-await storage.save('user-1', { name: 'Juan', age: 30 });
+await storage.save('user-1', { name: 'John', age: 30 });
 const user = await storage.load('user-1');
 ```
 
@@ -51,6 +54,9 @@ new DataStorage<T>(adapter: StorageAdapter<T>)
 | `delete` | `key: string` | `Promise<void>` | Eliminar datos por clave |
 | `clear` | - | `Promise<void>` | Limpiar todos los datos almacenados |
 | `getAll` | - | `Promise<Record<string, T>>` | Obtener todos los datos almacenados |
+| `on` | `event: DataStorageEvents, listener: (data: T) => void` | `void` | Registrar un listener de evento |
+| `off` | `event: DataStorageEvents, listener: (data: T) => void` | `void` | Eliminar un listener de evento |
+| `setEmitMode` | `mode: EmitMode` | `void` | Establecer el modo de emisión (info, debug, error, none) |
 
 ### StringMapStorage
 
@@ -179,7 +185,8 @@ interface StorageAdapter<T> {
 
 ### Operaciones CRUD Básicas
 ```typescript
-import { DataStorage, LocalStorageAdapter } from 'json-obj-manager';
+import { DataStorage } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
 
 const storage = new DataStorage(new LocalStorageAdapter('app-data'));
 
@@ -201,7 +208,9 @@ const allData = await storage.getAll();
 
 ### Aplicación de Chat
 ```typescript
-import { PersistentChatMemory, LocalStorageAdapter } from 'json-obj-manager';
+import { PersistentChatMemory } from 'json-obj-manager';
+import { LocalStorageAdapter } from 'json-obj-manager/browser';
+import { Message } from 'json-obj-manager';
 
 const chat = new PersistentChatMemory(
   new LocalStorageAdapter<Message[]>('chat-app')
