@@ -24,8 +24,9 @@ export interface Message {
 }
 
 export interface MemoryStore {
-  addUserMessage(content: string): void;
-  addAIMessage(content: string): void;
+  addUserMessage(content: string, timestamp?: Date): void;
+  addAIMessage(content: string, timestamp?: Date): void;
   getMessages(): Message[];
+  getLastMessages(count?: number): Message[];
   clear(): void;
 }
