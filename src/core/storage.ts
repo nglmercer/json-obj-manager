@@ -100,7 +100,15 @@ export class DataStorage<T extends AllowedData> {
 
   private validateData(data: T): boolean {
     if (data === null || data === undefined) return false;
-    return true;
+    
+    // Validar que el dato sea serializable
+    try {
+      JSON.stringify(data);
+      return true;
+    } catch (error) {
+      console.warn('Data is not serializable:', error);
+      return false;
+    }
   }
 
   // Eventos para modo 'all' (por defecto)
@@ -161,5 +169,13 @@ export class InMemoryAdapter<T> implements StorageAdapter<T> {
 
   async clear(): Promise<void> {
     this.storage.clear();
+  }
+
+  async getAll(): Promise<Record<string, T>> {
+    const result: Record<string, T> = {};
+    for (const [key, value] of this.storage.entries()) {
+      result[key] = value;
+    }
+    return result;
   }
 }

@@ -7,6 +7,13 @@ export interface StorageAdapter<T> {
   clear(): Promise<void>;
 }
 
+// Interfaz extendida para adaptadores con funcionalidades adicionales
+export interface ExtendedStorageAdapter<T> extends StorageAdapter<T> {
+  getAll(): Promise<Record<string, T>>; // Requerido en versión extendida
+  isAvailable?(): boolean;
+  getStorageInfo?(): { keyCount: number; estimatedSize: number };
+}
+
 export type StringMap = Record<string, string>;
 export type AllowedData = string | number | boolean | null | { [key: string]: AllowedData } | AllowedData[] | StringMap | unknown;
 

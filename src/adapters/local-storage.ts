@@ -28,8 +28,21 @@ export class LocalStorageAdapter<T> implements StorageAdapter<T> {
       return;
     }
     try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.cache));
+      const dataString = JSON.stringify(this.cache);
+      
+      // Verificar si excede el límite de localStorage (aproximadamente 5-10MB)
+      if (dataString.length > 5 * 1024 * 1024) {
+        console.warn('Data size exceeds recommended localStorage limit (5MB)');
+      }
+      
+      localStorage.setItem(this.storageKey, dataString);
     } catch (error) {
+      // Manejar errores específicos de localStorage
+      if (error instanceof Error) {
+        if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+          throw new Error('LocalStorage quota exceeded. Consider clearing some data or using a different storage method.');
+        }
+      }
       console.warn('Error saving to localStorage:', error);
       throw new Error(`LocalStorage error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -70,7 +83,32 @@ export class LocalStorageAdapter<T> implements StorageAdapter<T> {
 
   // Método para eliminar completamente del localStorage
   destroy(): void {
-    localStorage.removeItem(this.storageKey);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.storageKey);
+    }
     this.cache = {};
+  }
+
+  // Método para obtener estadísticas de uso
+  getStorageInfo(): { keyCount: number; estimatedSize: number; storageKey: string } {
+    const dataString = JSON.stringify(this.cache);
+    return {
+      keyCount: Object.keys(this.cache).length,
+      estimatedSize: dataString.length,
+      storageKey: this.storageKey
+    };
+  }
+
+  // Método para verificar si localStorage está disponible
+  static isAvailable(): boolean {
+    try {
+      if (typeof localStorage === 'undefined') return false;
+      const testKey = '__localStorage_test__';
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

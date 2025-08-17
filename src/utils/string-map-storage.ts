@@ -23,8 +23,26 @@ export class StringMapStorage extends DataStorage<StringMap> {
     delete data[key];
     await this.save('string-map', data);
   }
-  //@ts-ignore
-  async getAll(): Promise<StringMap> {
+
+  // Override del método getAll para devolver específicamente StringMap
+  override async getAll(): Promise<Record<string, StringMap>> {
+    return await super.getAll();
+  }
+
+  // Método específico para obtener el StringMap completo
+  async getStringMap(): Promise<StringMap> {
     return (await this.load('string-map')) || {};
+  }
+
+  // Método para obtener todas las claves
+  async getKeys(): Promise<string[]> {
+    const data = await this.getStringMap();
+    return Object.keys(data);
+  }
+
+  // Método para obtener todos los valores
+  async getValues(): Promise<string[]> {
+    const data = await this.getStringMap();
+    return Object.values(data);
   }
 }
